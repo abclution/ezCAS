@@ -1,2 +1,8 @@
 .ARCHIVE
 CAS-command.txt
+.todelete
+.ARCHIVES
+.gitignore
+.vscode
+tox.ini
+ezCAS-VERSIONSnotes.txt

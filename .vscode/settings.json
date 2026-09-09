@@ -1,4 +1,14 @@
 {
-    "editor.defaultFormatter": "mikoz.composite-formatter",
-    "editor.bracketPairColorization.independentColorPoolPerBracketType": true
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#4d5e1f",
+        "activityBar.foreground": "#ffffff",
+        "activityBar.inactiveForeground": "#c9d4a0",
+        "sideBar.background": "#5a6e26",
+        "sideBar.foreground": "#e0e0e0",
+        "sideBarTitle.foreground": "#ffffff",
+        "statusBar.background": "#4d5e1f",
+        "statusBar.foreground": "#ffffff",
+        "statusBar.noFolderBackground": "#4d5e1f"
+    },
+    "editor.defaultFormatter": null
 }

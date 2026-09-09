@@ -1,0 +1,7 @@
+def _expand_paths(paths, recursive):
+    for p_str in paths:
+        p = Path(p_str).resolve()
+        if p.is_file(): yield p
+        elif p.is_dir() and recursive:
+            for sub in p.rglob('*'):
+                if sub.is_file(): yield sub
