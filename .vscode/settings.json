@@ -10,5 +10,5 @@
         "statusBar.foreground": "#ffffff",
         "statusBar.noFolderBackground": "#4d5e1f"
     },
-    "editor.defaultFormatter": null
+    "editor.defaultFormatter": "mikoz.composite-formatter"
 }

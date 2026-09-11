@@ -13,6 +13,7 @@ import sys
 import tempfile
 import time
 import xml.etree.ElementTree as XmlTree
+from pathlib import Path
 
 CONFIG_FILE = ".CAS_datastore.config"
 
@@ -21,31 +22,52 @@ CONFIG_FILE = ".CAS_datastore.config"
 # INSTANCE TS ONE TIME FOR LOGGING
 # RENAME ET import to XmlTree
 
-def get_timestamp_prefix():
-    now = datetime.datetime.now()
-    return f"{now.strftime('%Y.%m.%d')}_{int(time.time())}"
+
+def get_TS_ISO():
+    TimeStampISOandLocalTZ = f"{int(time.time())}_{datetime.datetime.now().isoformat()}"
+    return f"{TimeStampISOandLocalTZ}"
 
 
-ts = get_timestamp_prefix()
+def get_TS_epoch():
+    TimeStamp_Epoch = int(time.time())
+    return f"{TimeStamp_Epoch}"
+
+
+TS_ScriptStart_Epoch = get_TS_epoch()
+TS_ScriptStart_ISO = get_TS_ISO()
+TS_ScriptStart_Full = f"{TS_ScriptStart_Epoch}_{TS_ScriptStart_ISO}"
+logScriptPathName = "__archived_sets"
+
+# file = Path("new/directory/foo")
+# file.parent.mkdir(parents=True, exist_ok=True)
+# file.write_text("toto")
 
 
 def log_and_script(action_type, commands, log_message, repo_root):
-    log_file = os.path.join(repo_root, f"{ts}__{action_type}.log")
-    script_file = os.path.join(repo_root, f"{ts}__{action_type}.sh")
+    log_file = Path(
+        f"{repo_root}//{logScriptPathName}//{TS_ScriptStart_Epoch}//{action_type}//{TS_ScriptStart_ISO}__{action_type}.log"
+    )
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    script_file = Path(
+        f"{repo_root}//{logScriptPathName}//{TS_ScriptStart_Epoch}//{action_type}//{TS_ScriptStart_ISO}__{action_type}.sh"
+    )
+    script_file.parent.mkdir(parents=True, exist_ok=True)
+
+    #    script_file = os.path.join(repo_root,"/",f"{TS_ScriptStart_Epoch}","/",f"{TS_ScriptStart_Full}","__",{action_type}.sh,)
 
     if not os.path.exists(log_file):
         with open(log_file, "a", encoding="utf-8") as f:
-            f.write(f"[{datetime.datetime.now().isoformat()}]\n\n")
+            f.write(f"[{get_TS_ISO()}]\n\n")
 
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{log_message}\n")
 
     if commands:
-
         if not os.path.exists(script_file):
             with open(script_file, "a", encoding="utf-8") as f:
                 f.write("#!/usr/bin/env bash\nset -euo pipefail\n")
-                f.write(f"# [{datetime.datetime.now().isoformat()}]\n\n")
+                f.write(f"# [{get_TS_ISO()}]\n\n")
                 os.chmod(script_file, 0o755)
 
         with open(script_file, "a", encoding="utf-8") as f:
@@ -63,7 +85,7 @@ def calculate_hash(filepath, algo="sha512"):
 
 def get_shard_dir(repo_root, file_hash, shard_depth):
     depth = max(0, min(shard_depth, len(file_hash) // 2))
-    path_components = [file_hash[i * 2: i * 2 + 2] for i in range(depth)]
+    path_components = [file_hash[i * 2 : i * 2 + 2] for i in range(depth)]
     return os.path.join(repo_root, *path_components)
 
 
@@ -88,7 +110,7 @@ def extract_metadata(filepath):
     st = os.stat(filepath)
     return {
         "path": os.path.abspath(filepath),
-        "ingested_at": datetime.datetime.now().isoformat(),
+        "ingested_at": get_TS_ISO(),
         "size": st.st_size,
         "mtime": st.st_mtime,
         "ctime": getattr(st, "st_ctime", st.st_mtime),
@@ -260,7 +282,7 @@ def ingest_file(src, repo_root, cfg, args):
         f"{meta['path']}_{meta['mtime']}_{meta['size']}".encode("utf-8"),
     ).hexdigest()
 
-#    print(f"Processing: {src} - {meta["size"]} \n")
+    #    print(f"Processing: {src} - {meta["size"]} \n")
 
     if meta["size"] == 0:
         print(f"Skipping: {src} because filesize is {meta['size']} \n")
@@ -273,8 +295,7 @@ def ingest_file(src, repo_root, cfg, args):
         )
         return
     else:
-
-        print(f"Processing: {src} - {meta["size"]} \n")
+        print(f"Processing: {src} - {meta['size']} \n")
         sidecar_data = read_sidecar(sidecar_path, cfg["format"]) or {
             "hash": file_hash,
             "algorithm": cfg["algo"],
@@ -296,13 +317,13 @@ def ingest_file(src, repo_root, cfg, args):
         else:
             existing_mtime = os.stat(blob_path).st_mtime
             if meta["mtime"] < existing_mtime:
-                #set_immutability(blob_path, False)
-                #perform_link(src, blob_path, args.link_mode)
-                #set_immutability(blob_path, True)
+                # set_immutability(blob_path, False)
+                # perform_link(src, blob_path, args.link_mode)
+                # set_immutability(blob_path, True)
                 log_and_script(
-                    f"origin_update__{file_hash}",
+                    f"duplicates-with-earlier-origin//{file_hash}",
                     [],
-                    f"Updated origin for\n{file_hash} with\n {src}\n  -[{existing_mtime}]\n  -[{meta["mtime"]}] ",
+                    f"Updated origin for\n{file_hash} with\n {src}\n  -[{existing_mtime}]\n  -[{meta['mtime']}] ",
                     repo_root,
                 )
             write_sidecar(sidecar_path, sidecar_data, cfg["format"])
@@ -382,17 +403,44 @@ def main():
         atomic_write(os.path.join(args.repo, CONFIG_FILE), json.dumps(cfg, indent=2))
         return
 
-    targets = []
+    def get_safe_size(filepath):
+        try:
+            return os.path.getsize(filepath)
+        except OSError:
+            return 0
+
+    targets = set()
     for f in args.files:
         if os.path.isdir(f) and args.recursive:
             for root, _, filenames in os.walk(f):
                 for fn in filenames:
-                    targets.append(os.path.join(root, fn))
+                    targets.add(os.path.join(root, fn))
         elif os.path.isfile(f):
-            targets.append(f)
+            targets.add(f)
 
-    for target in targets:
+    sorted_targets = sorted(list(targets), key=get_safe_size)
+
+    log_and_script(
+        "sorted-target-files",
+        [],
+        f"{sorted_targets}",
+        args.repo,
+    )
+
+    for target in sorted_targets:
         ingest_file(target, args.repo, cfg, args)
+
+    # targets = []
+    # for f in args.files:
+    #     if os.path.isdir(f) and args.recursive:
+    #         for root, _, filenames in os.walk(f):
+    #             for fn in filenames:
+    #                 targets.append(os.path.join(root, fn))
+    #     elif os.path.isfile(f):
+    #         targets.append(f)
+
+    # for target in targets:
+    #     ingest_file(target, args.repo, cfg, args)
 
 
 if __name__ == "__main__":
