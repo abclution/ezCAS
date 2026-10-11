@@ -175,10 +175,48 @@ files
 
 ---------------------------------------------------------------
 
+Please create a docstring description for this python function as well as add an option to use the local filesystem utility "getfattr"  the -d switch and output using -e switch in all three formats text, hex, base64 ```def extract_xattrs(filepath):
 
+
+xattrs = {}
+    if not hasattr(os, "listxattr"):
+        return xattrs
+    try:
+        attrs = os.listxattr(filepath)
+        for attr in attrs:
+            try:
+                val = os.getxattr(filepath, attr)
+                xattrs[attr] = base64.b64encode(val).decode("ascii")
+            except OSError:
+                continue
+    except OSError:
+        pass
+    return xattrs```
 ---------------------------------------------------------------
 
 
+Please modify the following function to use the built in getfattr system binary (and make it the default)
+getfattr should be called with the switches -d (output all extended attribute values) &
+-e text/hex/base64 (encode output values (as 'text', 'hex' or 'base64') based on the function parameter encoding.
+Adjust the python library function to match accordingly when called.
+Please create a docstring description for this python function afterwards. Thanks.
+```
+def extract_xattrs(filepath,encoding=text):
+    xattrs = {}
+    if not hasattr(os, "listxattr"):
+        return xattrs
+    try:
+        attrs = os.listxattr(filepath)
+        for attr in attrs:
+            try:
+                val = os.getxattr(filepath, attr)
+                xattrs[attr] = base64.b64encode(val).decode("ascii")
+            except OSError:
+                continue
+    except OSError:
+        pass
+    return xattrs
+```
 ---------------------------------------------------------------
 
 PURELY FUNCTIONAL BASED STYLE

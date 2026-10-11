@@ -1,14 +1,23 @@
 {
+    "editor.defaultFormatter": "mikoz.composite-formatter",
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
     "workbench.colorCustomizations": {
-        "activityBar.background": "#4d5e1f",
+        "activityBar.background": "#212121",
         "activityBar.foreground": "#ffffff",
-        "activityBar.inactiveForeground": "#c9d4a0",
-        "sideBar.background": "#5a6e26",
+        "activityBar.inactiveForeground": "#a0a0a0",
+        "sideBar.background": "#212121",
         "sideBar.foreground": "#e0e0e0",
         "sideBarTitle.foreground": "#ffffff",
-        "statusBar.background": "#4d5e1f",
+        "statusBar.background": "#5d3a1a",
         "statusBar.foreground": "#ffffff",
-        "statusBar.noFolderBackground": "#4d5e1f"
-    },
-    "editor.defaultFormatter": "mikoz.composite-formatter"
+        "statusBar.noFolderBackground": "#5d3a1a",
+        "titleBar.activeBackground": "#595959",
+        "titleBar.activeForeground": "#ffffff",
+        "titleBar.inactiveBackground": "#595959",
+        "titleBar.inactiveForeground": "#a0a0a0",
+        "panel.background": "#212118",
+        "panel.border": "#212121"
+    }
 }
