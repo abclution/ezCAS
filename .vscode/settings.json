@@ -19,5 +19,16 @@
         "titleBar.inactiveForeground": "#a0a0a0",
         "panel.background": "#212118",
         "panel.border": "#212121"
-    }
+    },
+    "python-hover.onlineDiscovery": true,
+    "python-hover.ui.showCallouts": false,
+    "python-hover.ui.contextMenu.debugPinHover": false,
+    "python-hover.ui.showSignatures": false,
+    "python-hover.ui.maxExamples": 4,
+    "python-hover.ui.moduleBrowser.defaultDensity": "compact",
+    "python-hover.ui.showSeeAlso": false,
+    "python-hover.ui.showRaises": false,
+    "git.autoRepositoryDetection": false,
+    "git.repositoryScanIgnoredFolders": [],
+    "git.repositoryScanMaxDepth": 0
 }

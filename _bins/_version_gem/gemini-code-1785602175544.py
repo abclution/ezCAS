@@ -5,6 +5,7 @@ import datetime
 import hashlib
 import json
 import os
+import errno
 import shlex
 import shutil
 import stat
@@ -66,8 +67,6 @@ def log_and_script(action_type, commands, log_message, repo_root):
     )
     script_file.parent.mkdir(parents=True, exist_ok=True)
 
-    #    script_file = os.path.join(repo_root,"/",f"{TS_ScriptStart_Epoch}","/",f"{TS_ScriptStart_Full}","__",{action_type}.sh,)
-
     if not os.path.exists(log_file):
         with open(log_file, "a", encoding="utf-8") as f:
             f.write(f"[{get_TS_ISO()}]\n\n")
@@ -105,35 +104,24 @@ def get_shard_dir(repo_root, file_hash, shard_depth):
     return os.path.join(repo_root, *path_components)
 
 
-##################################################################
-# def extract_xattrs_pre(filepath):
-#     xattrs = {}
-#     if not hasattr(os, "listxattr"):
-#         return xattrs
-#     try:
-#         attrs = os.listxattr(filepath)
-#         for attr in attrs:
-#             try:
-#                 val = os.getxattr(filepath, attr)
-#                 xattrs[attr] = base64.b64encode(val).decode("ascii")
-#             except OSError:
-#                 continue
-#     except OSError:
-#         pass
-#     return xattrs
-
-
 def extract_xattrs(filepath, encoding="text", method="local_bin"):
-    # """
-    # Extracts and returns all extended attributes of a file.
+    
+    # TODO Modify function to use the built in getfattr system binary (and make it the default)
+    # getfattr should be called with the switches -d (output all extended attribute values) & -e text / hex/ base64  each
+    # (encode output values (as 'text', 'hex' or 'base64') based on the function parameter encoding. Input the dumped attributes
+    # into the sidecar. Adjust the python library function to match accordingly when called. 
+    # Please update docstring description for this python function afterwards.
+                                                                                                                                                                                                                          
+    """
+    Extracts and returns all extended attributes of a file.
 
-    # Args:
-    #     filepath (str): The path to the file.
-    #     encoding (str): The encoding format for the attribute values ('text', 'hex', or 'base64'). Default is 'text'.
-    #     method (str) python, local_bin
-    # Returns:
-    #     dict: A dictionary containing the extended attribute names as keys and their encoded values as values.
-    # """
+    Args:
+        filepath (str): The path to the file.
+        encoding (str): The encoding format for the attribute values ('text', 'hex', or 'base64'). Default is 'text'.
+        method (str) python, local_bin
+    Returns:
+        dict: A dictionary containing the extended attribute names as keys and their encoded values as values.
+    """
     if method == "local_bin":
         try:
             xattrs = subprocess.check_output(
@@ -270,6 +258,7 @@ def migrate_shards(repo_root, new_depth, fmt, suffix):
 
 ##################################################################
 def ingest_file(src, repo_root, cfg, args):
+    # TODO Adjust function to by default only log and create ingest script, running it only if "force" switch is used.
     if not os.path.isfile(src) or os.path.islink(src):
         return
     file_hash = calculate_hash(src, cfg["algo"])
@@ -451,14 +440,9 @@ def sidecar_read(sidecar_path, fmt="json"):
                 data["instances"][inst_id] = inst_data
         return data
 
-    def get_safe_size(filepath):
-        try:
-            return os.path.getsize(filepath)
-        except OSError:
-            return 0
 
-
-def main():
+##################################################################
+def parse_arguments():
     parser = argparse.ArgumentParser(description="ezCAS Storage Utility")
     parser.add_argument("repo", help="Path to CAS Repository")
     parser.add_argument("files", nargs="*", help="Files to ingest")
@@ -480,12 +464,29 @@ def main():
     )
     parser.add_argument("--shard-depth", type=int, default=2)
     parser.add_argument("--migrate-shards", action="store_true")
+    return parser.parse_args()
 
-    args = parser.parse_args()
+
+##################################################################
+##################################################################
+
+
+def get_safe_size(filepath):
+    try:
+        return os.path.getsize(filepath)
+    except OSError:
+        return 0
+
+
+##################################################################
+
+
+def main():
+    args = parse_arguments()
     cfg = load_or_init_config(args.repo, args)
 
     if args.migrate_shards:
-        migrate_shards(args.repo, args.shard_depth, cfg["format"], cfg["suffix"])
+        migrate_shards(args.repo, args.shard_depth, args.format, args.suffix)
         cfg["shard_depth"] = args.shard_depth
         atomic_write(os.path.join(args.repo, CONFIG_FILE), json.dumps(cfg, indent=2))
         return
@@ -499,6 +500,15 @@ def main():
         elif os.path.isfile(f):
             targets.add(f)
 
+    # TODO Refactor and refine sorting into function(s) and adjust other functions to
+    # further sort or process sorted targets in groupings having identical filesize,
+    # skip injesting filegroups of zero bytes,
+    # and enhance injest to process identical filesize file groupings together
+    # to optimize the deduplication process & optimize discovery and storage of earliest
+    # created file. Also earliest file blob should be determined by whatever time date meta fields
+    # are availiable, not only what it currently looks for.
+
+    # TODO
     sorted_targets = sorted(list(targets), key=get_safe_size)
 
     log_and_script(
@@ -512,17 +522,7 @@ def main():
         ingest_file(target, args.repo, cfg, args)
 
 
+##################################################################
+
 if __name__ == "__main__":
     main()
-
-    # targets = []
-    # for f in args.files:
-    #     if os.path.isdir(f) and args.recursive:
-    #         for root, _, filenames in os.walk(f):
-    #             for fn in filenames:
-    #                 targets.append(os.path.join(root, fn))
-    #     elif os.path.isfile(f):
-    #         targets.append(f)
-
-    # for target in targets:
-    #     ingest_file(target, args.repo, cfg, args)
