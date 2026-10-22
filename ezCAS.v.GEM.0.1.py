@@ -29,21 +29,26 @@ CONFIG_FILE = ".CAS_datastore.config"
 
 
 ##################################################################
+nowStart = datetime.datetime.now()
+
+
 def get_TS_ISO():
-    TimeStampISOandLocalTZ = (
-        f"{int(time.time())}_{datetime.datetime.now().isoformat()}"
-        # f"{date.today().isoformat()}__{int(time.time())}"
-    )
+    TimeStampISOandLocalTZ = f"{datetime.datetime.now().isoformat(sep='t', timespec='seconds').replace('t', '_T').replace(':', '.')}"
+    # TimeStampISOandLocalTZ = f"{nowStart.isoformat(sep='t', timespec='seconds').replace('t', '_T').replace(':', '.')}"
+    # TimeStampISOandLocalTZ = (
+    #     TimeStampISOandLocalTZ.replace("t", "_T").replace(":", ".")
+    #     # f"{date.today().isoformat()}__{int(time.time())}"
+    # )
     return f"{TimeStampISOandLocalTZ}"
 
 
 ##################################################################
 def get_DS_ISO():
     DateStampToday = (
+        f"{date.today().isoformat()}"
         # f"{int(time.time())}_{datetime.datetime.now().isoformat()}"
         # f"{date.today().isoformat()}__{int(time.time())}"
-        # f"{date.today().isoformat()}"
-        f"{datetime.datetime.now(tzinfo=None).date.isoformat()}"
+        # f"{datetime.datetime.now().date.isoformat()}"
     )
     return f"{DateStampToday}"
 
@@ -215,21 +220,21 @@ def extract_xattrs(filepath, encoding="text", method="local_bin"):
 
     if method == "local_bin":
         try:
-            res = subprocess.run(
+            attrs_raw_output = subprocess.run(
                 ["getfattr", "-d", "-m", "-", "-e", encoding, str(filepath)],
                 capture_output=True,
                 text=True,
                 check=False,
             )
-            if res.returncode == 0:
-                for line in res.stdout.splitlines():
+            if attrs_raw_output.returncode == 0:
+                for line in attrs_raw_output.stdout.splitlines():
                     line = line.strip()
                     if not line or line.startswith("#"):
                         continue
                     if "=" in line:
                         attr_name, val = line.split("=", 1)
                         xattrs[attr_name.strip()] = val.strip()
-                return xattrs
+                return xattrs, attrs_raw_output
         except (OSError, subprocess.SubprocessError):
             pass
 
@@ -238,8 +243,8 @@ def extract_xattrs(filepath, encoding="text", method="local_bin"):
         if not hasattr(os, "listxattr"):
             return xattrs
         try:
-            attrs = os.listxattr(filepath)
-            for attr in attrs:
+            attrs_raw_output = os.listxattr(filepath)
+            for attr in attrs_raw_output:
                 try:
                     value = os.getxattr(filepath, attr)
                     if encoding == "base64":
@@ -254,9 +259,9 @@ def extract_xattrs(filepath, encoding="text", method="local_bin"):
                     continue
         except OSError:
             pass
-        return xattrs
+        return (xattrs, attrs_raw_output)
 
-    return xattrs
+    return (xattrs, attrs_raw_output)
 
 
 ##################################################################
@@ -268,7 +273,9 @@ def extract_metadata(filepath):
     meta = {
         "filename": os.path.basename(filepath),
         "path": os.path.abspath(filepath),
-        "ingested_at": get_TS_ISO(),
+        "cataloged_date": get_DS_ISO(),
+        "cataloged_timedate_ISO": get_TS_ISO(),
+        "cataloged_time_EPOCH": get_TS_epoch(),
         "size": st.st_size,
         "mtime": ts["mtime"],
         "ctime": ts["ctime"],

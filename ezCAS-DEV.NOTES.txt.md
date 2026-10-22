@@ -24,26 +24,25 @@ gemini-code-1785602175544.py \
     --migrate-shards \
     --shard-depth 1 \
     /zpool_8tb-ext/ezCAS-TESTING/CAS-datastore-04
-
 ```
 
 # TODOS
 
 * ADD / TEST SOME CHECKS WHEN INGESTING AND VALIDATING DUPLICATES WHEN IN CAS ITEM IS SYMLINK.
-
   * EITHER REFUSE TO REMOVE DUPLICATE THAT POINTS TO SYMLINKIN CAS, OR RESOLVE SYMLINK INTO A FILE/HARDLINK FIRST, THEN DEDUPE.
   * DEDUPE/INGEST SYMLINK/SYMLINK FAILS IF NEW, TESTED: ADD VIA HARDLINK OR ALREADY IN CAS, copy as reflink fails due tofile existing. force does not work either.
-
   * Must rm file first bug? not sure
+
 
 ---
 
 # AI ASSIST NOTES
 
+
 ---
 
-| QUESTION                                                                                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QUESTION |
+|----|
 | Please create a docstring description for this python function as well as add an option to use the local filesystem utility "getfattr" the -d switch and output using -e switch in all three formats text, hex, base64 |
 
 ```
@@ -64,16 +63,17 @@ def extract_xattrs(filepath):
     except OSError:
         pass
         return xattrs
-
 ```
+
 
 ---
 
 
 
 
-| QUESTION                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+| QUESTION |
+|----|
 | Please modify the following function to use the built in getfattr system binary (and make it the default) getfattr should be called with the switches -d (output all extended attribute values) & -e text/hex/base64 (encode output values (as 'text', 'hex' or 'base64') based on the function parameter encoding. Adjust the python library function to match accordingly when called. Please create a docstring description for this python function afterwards. Thanks. |
 
 ```
@@ -94,10 +94,11 @@ def extract_xattrs(filepath,encoding=text):
     return xattrs
 ```
 
+
 ---
 
-| QUESTION                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QUESTION |
+|----|
 | Ok, some first corrections. Logs while properly separated, should be timestamped per session, not per file, so ts (timestamp prefix) should be consistent across each log per session.  Progress during the session should be visible by default, including what attributes, standard + extended are found & saved,  perhaps a -q / --quiet switch to reduce output other than errors. |
 
 
@@ -115,22 +116,24 @@ def extract_xattrs(filepath,encoding=text):
   * XML?
   * JSON?
 * Skip zero size files
-*
+* \
 
 
-| *<u>CHECKS</u>*                              | *<u>RESULT</u>* | *<u>NOTES</u>* |
-| :------------------------------------------- | --------------- | -------------- |
-| Config file created?                         |                 |                |
-| - Secondary run w/o switches follows config? |                 |                |
-| - Major switch changes throw config error?   |                 |                |
-| - Which switches?                            |                 |                |
-| Shard depth obeyed?                          |                 |                |
-| Shard depth reorg ok?                        |                 |                |
-| Sidecar created ok? XML? JSON?               |                 |                |
-| Skip zero size files                         |                 |                |
-| Skip symlinks                                |                 |                |
-|                                              |                 |                |
-|                                              |                 |                |
+
+| *<u>CHECKS</u>* | *<u>RESULT</u>* | *<u>NOTES</u>* |
+|:---|----|----|
+| Config file created? |    |    |
+| - Secondary run w/o switches follows config? |    |    |
+| - Major switch changes throw config error? |    |    |
+| - Which switches? |    |    |
+| Shard depth obeyed? |    |    |
+| Shard depth reorg ok? |    |    |
+| Sidecar created ok? XML? JSON? |    |    |
+| Skip zero size files |    |    |
+| Skip symlinks |    |    |
+|    |    |    |
+|    |    |    |
+
 
 ---
 
@@ -150,10 +153,9 @@ cd /zpool_20tb/eVAULT/GALLERY/GALLERY_Staging_Folders
 
 260.6 GiB (279,855,608,112)
 51,125 files, 8,598 sub-folders
-
 ```
 
-###################################################################################
+\###################################################################################
 
 
 ## HELPER FUNCTIONS NOTES
@@ -166,18 +168,15 @@ find ./  -iname '*.py'   ! -type l  -exec md5sum {}  \; |sort -t. -k2
 2135bc63400a3bcb590f9c4dc48ce725  ./fixd.alt-CAS.v.777/CASIngestor/_get_metadata.py
 30dc8cad8bc068804aa6ae00cc885fd3  ./fixd.alt-CAS.v.777/CASIngestor/_get_storage_path.py
 ...
-
 ```
 
 
- ./fixd.CAS-ingestion-v.04/_expand_paths.py
----------------------------------------------------------------------------------------------------------
+./fixd.CAS-ingestion-v.04/_expand_paths.py
 
 
 
 
 
----
 
 ---
 
@@ -196,7 +195,9 @@ find ./  -iname '*.py'   ! -type l  -exec md5sum {}  \; |sort -t. -k2
 * fixd.CAS-ingestion-v.07.001.py
 * fixd.CAS-ingestion-v.08.000.py
 
+
 ---
+
 
 ---
 
@@ -213,11 +214,13 @@ find ./  -iname '*.py'   ! -type l  -exec md5sum {}  \; |sort -t. -k2
 │   └── _resolve_config.py
 ```
 
+
 ---
 
 ## fixd.CAS-ingestion-v.08.002.py
 
 ### FUNCTIONS
+
 
 ---
 
@@ -239,8 +242,8 @@ get_raw_xattrs function name changed to _GetFileXattrs
 │   ├── migrate_structure.py
 │   └── _resolve_config.py -> ../../fixd.CAS-ingestion-v.08.001/CASIngestor/_resolve_config.py
 ├── _GetFileXattrs.py
-
 ```
+
 
 ---
 
@@ -263,8 +266,8 @@ get_raw_xattrs function name changed to _GetFileXattrs
 │   ├── migrate_structure.py -> ../../fixd.CAS-ingestion-v.09.000/CASIngestor/migrate_structure.py
 │   └── _resolve_config.py -> ../../fixd.CAS-ingestion-v.08.001/CASIngestor/_resolve_config.py
 ├── _GetFileXattrs.py -> ../fixd.CAS-ingestion-v.09.000/_GetFileXattrs.py
-
 ```
+
 
 ---
 
@@ -305,7 +308,6 @@ get_raw_xattrs function name changed to _GetFileXattrs
 ├── create_empty.py -> ../JSONHandler/create_empty.py
 ├── load.py
 └── save.py
-
 ```
 
 ## USAGE: fixd.alt-CAS.v.777.py
@@ -331,10 +333,11 @@ repo [files ...]
 positional arguments:
 repo                  Path to CAS Repository
 files                 Files to ingest
-
 ```
 
+
 ---
+
 
 ---
 
@@ -344,17 +347,15 @@ files                 Files to ingest
 
 * fixd.CAS-addfiles-v.01.000.py
 * fixd.CAS-addfiles-v.01.001.py
-
   * timestamping for log added here
 * fixd.CAS-addfiles-v.02.000.py
 * fixd.CAS-addfiles-v.02.001.py
 * fixd.CAS-addfiles-v.03.py
-
   * replaced ingest with "process"
 * fixd.ez-CAS.v.01.py
-
   * Continoution of CAS-addfiles versions.
   * Almost identical to fixd.CAS-addfiles-v.03.py
+
 
 ---
 
@@ -388,10 +389,11 @@ symlink}
 positional arguments:
 repo
 files
-
 ```
 
+
 ---
+
 
 ---
 
@@ -435,8 +437,8 @@ sha512_224,blake2s,ripemd160}   Hashing algorithm to use
 
 positional arguments:
 path                  File or Directory to input
-
 ```
+
 
 ---
 
@@ -486,7 +488,9 @@ repo [files ...]
 positional arguments:
 repo                  Path to CAS Repository
 files                 Files to ingest
-
 ```
 
+
 ---
+
+
